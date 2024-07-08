@@ -8,6 +8,7 @@ class SnakesAndLadders:
         self.root.geometry("600x700")
         self.create_board()
         self.create_ui_elements()
+        self.current_player = 1
 
     def create_board(self):
         self.canvas = tk.Canvas(self.root, width=500, height=500, bg='white')
@@ -20,8 +21,14 @@ class SnakesAndLadders:
                 y1 = i * size
                 x2 = x1 + size
                 y2 = y1 + size
-                self.canvas.create_rectangle(x1, y1, x2, y2, outline='black')
-                num = 100 - (i * 10 + j)
+
+                color = 'lightblue' if (i + j) % 2 == 0 else 'white'
+                self.canvas.create_rectangle(x1, y1, x2, y2, outline='black', fill=color)
+
+                if i % 2 == 0:
+                    num = 100 - (i * 10 + j)
+                else:
+                    num = 100 - (i * 10 + (9 - j))
                 self.canvas.create_text(x1 + size/2, y1 + size/2, text=str(num))
 
     def create_ui_elements(self):
@@ -34,9 +41,29 @@ class SnakesAndLadders:
         self.dice_result_label = tk.Label(self.root, text="Dice Result: ", font=("Helvetica", 16))
         self.dice_result_label.pack(pady=10)
 
+        self.player_positions = {1: 1, 2: 1} 
+
     def roll_dice(self):
         result = randint(1, 6)
         self.dice_result_label.config(text=f"Dice Result: {result}")
+        self.move_player(result)
+
+    def move_player(self, steps):
+        player = self.current_player
+        current_position = self.player_positions[player]
+        new_position = current_position + steps
+
+        if new_position > 100:
+            new_position = current_position  
+
+        self.player_positions[player] = new_position
+        self.update_ui()
+
+        self.current_player = 2 if self.current_player == 1 else 1
+        self.info_label.config(text=f"Player {self.current_player}'s Turn")
+
+    def update_ui(self):
+        pass  # Placeholder
 
 if __name__ == "__main__":
     root = tk.Tk()
