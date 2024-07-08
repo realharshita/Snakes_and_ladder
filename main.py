@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter.colorchooser import askcolor
 from random import randint
+import json
 
 class SnakesAndLadders:
     def __init__(self, root):
@@ -104,6 +105,12 @@ class SnakesAndLadders:
         self.color_button2 = tk.Button(self.root, text="Player 2 Color", command=lambda: self.choose_color(2), font=("Helvetica", 16))
         self.color_button2.pack(pady=10)
 
+        self.save_button = tk.Button(self.root, text="Save Game", command=self.save_game, font=("Helvetica", 16))
+        self.save_button.pack(pady=10)
+
+        self.load_button = tk.Button(self.root, text="Load Game", command=self.load_game, font=("Helvetica", 16))
+        self.load_button.pack(pady=10)
+
         self.player_info_label = tk.Label(self.root, text="Player Positions:", font=("Helvetica", 16))
         self.player_info_label.pack(pady=10)
 
@@ -185,10 +192,33 @@ class SnakesAndLadders:
         self.create_board()
         self.player_positions = {1: 1, 2: 1}
         self.current_player = 1
-        self.roll_button.config(state='normal')
         self.update_ui()
+        self.highlight_current_player()
         self.info_label.config(text="Player 1's Turn")
         self.dice_result_label.config(text="Dice Result: ")
+        self.roll_button.config(state='normal')
+
+    def save_game(self):
+        game_state = {
+            "player_positions": self.player_positions,
+            "current_player": self.current_player,
+            "player_colors": self.player_colors
+        }
+        with open("savegame.json", "w") as f:
+            json.dump(game_state, f)
+
+    def load_game(self):
+        try:
+            with open("savegame.json", "r") as f:
+                game_state = json.load(f)
+                self.player_positions = game_state["player_positions"]
+                self.current_player = game_state["current_player"]
+                self.player_colors = game_state["player_colors"]
+                self.update_ui()
+                self.highlight_current_player()
+                self.info_label.config(text=f"Player {self.current_player}'s Turn")
+        except FileNotFoundError:
+            pass
 
     def choose_color(self, player):
         color = askcolor()[1]
