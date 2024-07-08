@@ -13,6 +13,7 @@ class SnakesAndLadders:
         self.create_board()
         self.create_ui_elements()
         self.current_player = 1
+        self.highlight_current_player()
 
         self.tokens = {
             1: self.canvas.create_oval(15, 15, 35, 35, fill='blue'),
@@ -79,10 +80,15 @@ class SnakesAndLadders:
 
         self.player_positions = {1: 1, 2: 1}
 
+        self.player_info_label = tk.Label(self.root, text="Player Positions:", font=("Helvetica", 16))
+        self.player_info_label.pack(pady=10)
+
+        self.player_positions_label = tk.Label(self.root, text="", font=("Helvetica", 16))
+        self.player_positions_label.pack()
+
     def roll_dice(self):
         result = randint(1, 6)
         self.dice_result_label.config(text=f"Dice Result: {result}")
-        self.animate_dice(result)
         self.root.after(1000, self.move_player, result)  # Add a delay to show dice roll
 
     def move_player(self, steps):
@@ -101,11 +107,13 @@ class SnakesAndLadders:
 
     def animate_move(self, player, start, end):
         if start < end:
-            for pos in range(start + 1, end + 1):
-                self.update_ui()
-                self.root.after(100)
-                self.root.update_idletasks()
+            self.move_step_by_step(player, start, end)
         self.check_win_condition(player, end)
+
+    def move_step_by_step(self, player, start, end):
+        if start < end:
+            self.update_ui()
+            self.root.after(100, self.move_step_by_step, player, start + 1, end)
 
     def check_win_condition(self, player, position):
         if position == 100:
@@ -116,8 +124,19 @@ class SnakesAndLadders:
         else:
             self.current_player = 2 if self.current_player == 1 else 1
             self.info_label.config(text=f"Player {self.current_player}'s Turn")
+            self.highlight_current_player()
+            self.roll_button.config(state='normal' if self.current_player == 1 else 'disabled')
+
+    def highlight_current_player(self):
+        for player in self.tokens:
+            if player == self.current_player:
+                self.canvas.itemconfig(self.tokens[player], outline='black', width=3)
+            else:
+                self.canvas.itemconfig(self.tokens[player], outline='')
 
     def update_ui(self):
+        self.highlight_current_player()
+        self.player_positions_label.config(text=f"Player 1: {self.player_positions[1]} | Player 2: {self.player_positions[2]}")
         for player, position in self.player_positions.items():
             x, y = self.get_coordinates(position)
             self.canvas.coords(self.tokens[player], x - 10, y - 10, x + 10, y + 10)
