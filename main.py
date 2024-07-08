@@ -5,7 +5,7 @@ class SnakesAndLadders:
     def __init__(self, root):
         self.root = root
         self.root.title("Snakes and Ladders")
-        self.root.geometry("600x700")
+        self.root.geometry("600x750")
         
         self.snakes = {16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78}
         self.ladders = {1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100}
@@ -74,12 +74,16 @@ class SnakesAndLadders:
         self.dice_result_label = tk.Label(self.root, text="Dice Result: ", font=("Helvetica", 16))
         self.dice_result_label.pack(pady=10)
 
+        self.reset_button = tk.Button(self.root, text="Reset Game", command=self.reset_game, font=("Helvetica", 16))
+        self.reset_button.pack(pady=10)
+
         self.player_positions = {1: 1, 2: 1}
 
     def roll_dice(self):
         result = randint(1, 6)
         self.dice_result_label.config(text=f"Dice Result: {result}")
-        self.move_player(result)
+        self.animate_dice(result)
+        self.root.after(1000, self.move_player, result)  # Add a delay to show dice roll
 
     def move_player(self, steps):
         player = self.current_player
@@ -93,11 +97,22 @@ class SnakesAndLadders:
         new_position = self.ladders.get(new_position, new_position)
 
         self.player_positions[player] = new_position
-        self.update_ui()
+        self.animate_move(player, current_position, new_position)
 
-        if new_position == 100:
+    def animate_move(self, player, start, end):
+        if start < end:
+            for pos in range(start + 1, end + 1):
+                self.update_ui()
+                self.root.after(100)
+                self.root.update_idletasks()
+        self.check_win_condition(player, end)
+
+    def check_win_condition(self, player, position):
+        if position == 100:
             self.info_label.config(text=f"Player {player} wins!")
             self.roll_button.config(state='disabled')
+            self.dice_result_label.config(text="Dice Result: ")
+            self.highlight_winner(player)
         else:
             self.current_player = 2 if self.current_player == 1 else 1
             self.info_label.config(text=f"Player {self.current_player}'s Turn")
@@ -107,7 +122,13 @@ class SnakesAndLadders:
             x, y = self.get_coordinates(position)
             self.canvas.coords(self.tokens[player], x - 10, y - 10, x + 10, y + 10)
 
+    def highlight_winner(self, player):
+        x, y = self.get_coordinates(100)
+        self.canvas.create_text(x, y - 40, text=f"Player {player} Wins!", font=("Helvetica", 16), fill="gold")
+
     def reset_game(self):
+        self.canvas.delete("all")
+        self.create_board()
         self.player_positions = {1: 1, 2: 1}
         self.current_player = 1
         self.roll_button.config(state='normal')
