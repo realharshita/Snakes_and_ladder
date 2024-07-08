@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter.colorchooser import askcolor
 from random import randint
 
 class SnakesAndLadders:
@@ -19,6 +20,7 @@ class SnakesAndLadders:
             1: self.canvas.create_oval(15, 15, 35, 35, fill='blue'),
             2: self.canvas.create_oval(15, 15, 35, 35, fill='red')
         }
+        self.player_colors = {1: 'blue', 2: 'red'}
         self.update_ui()
 
     def create_board(self):
@@ -78,6 +80,12 @@ class SnakesAndLadders:
         self.reset_button = tk.Button(self.root, text="Reset Game", command=self.reset_game, font=("Helvetica", 16))
         self.reset_button.pack(pady=10)
 
+        self.color_button1 = tk.Button(self.root, text="Player 1 Color", command=lambda: self.choose_color(1), font=("Helvetica", 16))
+        self.color_button1.pack(pady=10)
+
+        self.color_button2 = tk.Button(self.root, text="Player 2 Color", command=lambda: self.choose_color(2), font=("Helvetica", 16))
+        self.color_button2.pack(pady=10)
+
         self.player_positions = {1: 1, 2: 1}
 
         self.player_info_label = tk.Label(self.root, text="Player Positions:", font=("Helvetica", 16))
@@ -87,9 +95,13 @@ class SnakesAndLadders:
         self.player_positions_label.pack()
 
     def roll_dice(self):
+        self.roll_button.config(state='disabled')
+        self.animate_dice()
+
+    def animate_dice(self):
         result = randint(1, 6)
         self.dice_result_label.config(text=f"Dice Result: {result}")
-        self.root.after(1000, self.move_player, result)  # Add a delay to show dice roll
+        self.root.after(1000, self.move_player, result)
 
     def move_player(self, steps):
         player = self.current_player
@@ -112,8 +124,11 @@ class SnakesAndLadders:
 
     def move_step_by_step(self, player, start, end):
         if start < end:
+            self.player_positions[player] = start + 1
             self.update_ui()
             self.root.after(100, self.move_step_by_step, player, start + 1, end)
+        else:
+            self.update_ui()
 
     def check_win_condition(self, player, position):
         if position == 100:
@@ -140,6 +155,7 @@ class SnakesAndLadders:
         for player, position in self.player_positions.items():
             x, y = self.get_coordinates(position)
             self.canvas.coords(self.tokens[player], x - 10, y - 10, x + 10, y + 10)
+            self.canvas.itemconfig(self.tokens[player], fill=self.player_colors[player])
 
     def highlight_winner(self, player):
         x, y = self.get_coordinates(100)
@@ -154,6 +170,12 @@ class SnakesAndLadders:
         self.update_ui()
         self.info_label.config(text="Player 1's Turn")
         self.dice_result_label.config(text="Dice Result: ")
+
+    def choose_color(self, player):
+        color = askcolor()[1]
+        if color:
+            self.player_colors[player] = color
+            self.update_ui()
 
 if __name__ == "__main__":
     root = tk.Tk()
