@@ -12,7 +12,7 @@ class SnakesAndLadders:
         self.snakes = {16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78}
         self.ladders = {1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100}
         
-        self.player_count = 2  # Default to 2 players
+        self.player_count = 2
 
         self.show_player_selection_screen()
 
@@ -28,6 +28,34 @@ class SnakesAndLadders:
     def start_game(self, player_count):
         self.player_count = player_count
         self.selection_frame.destroy()
+
+        self.player_names = {1: "Player 1", 2: "Player 2"}
+        self.show_name_entry_screen()
+
+    def show_name_entry_screen(self):
+        self.name_entry_frame = tk.Frame(self.root)
+        self.name_entry_frame.pack(pady=20)
+
+        tk.Label(self.name_entry_frame, text="Enter Player Names", font=("Helvetica", 16)).pack(pady=10)
+
+        self.name_entries = {}
+        for i in range(1, self.player_count + 1):
+            frame = tk.Frame(self.name_entry_frame)
+            frame.pack(pady=5)
+            tk.Label(frame, text=f"Player {i} Name:", font=("Helvetica", 16)).pack(side=tk.LEFT)
+            entry = tk.Entry(frame, font=("Helvetica", 16))
+            entry.pack(side=tk.LEFT)
+            self.name_entries[i] = entry
+
+        tk.Button(self.name_entry_frame, text="Start Game", command=self.initialize_game, font=("Helvetica", 16)).pack(pady=10)
+
+    def initialize_game(self):
+        for i in range(1, self.player_count + 1):
+            name = self.name_entries[i].get()
+            if name:
+                self.player_names[i] = name
+
+        self.name_entry_frame.destroy()
 
         self.create_board()
         self.create_ui_elements()
@@ -87,7 +115,7 @@ class SnakesAndLadders:
         return x, y
 
     def create_ui_elements(self):
-        self.info_label = tk.Label(self.root, text="Player 1's Turn", font=("Helvetica", 16))
+        self.info_label = tk.Label(self.root, text=f"{self.player_names[1]}'s Turn", font=("Helvetica", 16))
         self.info_label.pack(pady=10)
 
         self.roll_button = tk.Button(self.root, text="Roll Dice", command=self.roll_dice, font=("Helvetica", 16))
@@ -99,10 +127,10 @@ class SnakesAndLadders:
         self.reset_button = tk.Button(self.root, text="Reset Game", command=self.reset_game, font=("Helvetica", 16))
         self.reset_button.pack(pady=10)
 
-        self.color_button1 = tk.Button(self.root, text="Player 1 Color", command=lambda: self.choose_color(1), font=("Helvetica", 16))
+        self.color_button1 = tk.Button(self.root, text=f"{self.player_names[1]} Color", command=lambda: self.choose_color(1), font=("Helvetica", 16))
         self.color_button1.pack(pady=10)
 
-        self.color_button2 = tk.Button(self.root, text="Player 2 Color", command=lambda: self.choose_color(2), font=("Helvetica", 16))
+        self.color_button2 = tk.Button(self.root, text=f"{self.player_names[2]} Color", command=lambda: self.choose_color(2), font=("Helvetica", 16))
         self.color_button2.pack(pady=10)
 
         self.save_button = tk.Button(self.root, text="Save Game", command=self.save_game, font=("Helvetica", 16))
@@ -110,6 +138,9 @@ class SnakesAndLadders:
 
         self.load_button = tk.Button(self.root, text="Load Game", command=self.load_game, font=("Helvetica", 16))
         self.load_button.pack(pady=10)
+
+        self.new_game_button = tk.Button(self.root, text="New Game", command=self.new_game, font=("Helvetica", 16))
+        self.new_game_button.pack(pady=10)
 
         self.player_info_label = tk.Label(self.root, text="Player Positions:", font=("Helvetica", 16))
         self.player_info_label.pack(pady=10)
@@ -155,47 +186,38 @@ class SnakesAndLadders:
 
     def check_win_condition(self, player, position):
         if position == 100:
-            self.info_label.config(text=f"Player {player} wins!")
+            self.info_label.config(text=f"{self.player_names[player]} wins!")
             self.roll_button.config(state='disabled')
             self.dice_result_label.config(text="Dice Result: ")
             self.highlight_winner(player)
         else:
             self.current_player = 2 if self.current_player == 1 else 1
-            self.info_label.config(text=f"Player {self.current_player}'s Turn")
+            self.info_label.config(text=f"{self.player_names[self.current_player]}'s Turn")
+            self.roll_button.config(state='normal')
             self.highlight_current_player()
-            if self.current_player == 2 and self.player_count == 1:
-                self.root.after(1000, self.roll_dice)
-            else:
-                self.roll_button.config(state='normal')
-
-    def highlight_current_player(self):
-        for player in self.tokens:
-            if player == self.current_player:
-                self.canvas.itemconfig(self.tokens[player], outline='black', width=3)
-            else:
-                self.canvas.itemconfig(self.tokens[player], outline='')
 
     def update_ui(self):
-        self.highlight_current_player()
-        self.player_positions_label.config(text=f"Player 1: {self.player_positions[1]} | Player 2: {self.player_positions[2]}")
-        for player, position in self.player_positions.items():
+        for player, token in self.tokens.items():
+            position = self.player_positions[player]
             x, y = self.get_coordinates(position)
-            self.canvas.coords(self.tokens[player], x - 10, y - 10, x + 10, y + 10)
-            self.canvas.itemconfig(self.tokens[player], fill=self.player_colors[player])
+            self.canvas.coords(token, x - 10, y - 10, x + 10, y + 10)
+            self.canvas.itemconfig(token, fill=self.player_colors[player])
+
+        positions_text = "\n".join([f"{self.player_names[p]}: {self.player_positions[p]}" for p in self.player_positions])
+        self.player_positions_label.config(text=positions_text)
+
+    def highlight_current_player(self):
+        self.canvas.itemconfig(self.tokens[1], outline='yellow' if self.current_player == 1 else '')
+        self.canvas.itemconfig(self.tokens[2], outline='yellow' if self.current_player == 2 else '')
 
     def highlight_winner(self, player):
-        x, y = self.get_coordinates(100)
-        self.canvas.create_text(x, y - 40, text=f"Player {player} Wins!", font=("Helvetica", 16), fill="gold")
+        self.canvas.itemconfig(self.tokens[player], outline='gold')
 
     def reset_game(self):
-        self.canvas.delete("all")
-        self.create_board()
         self.player_positions = {1: 1, 2: 1}
         self.current_player = 1
         self.update_ui()
-        self.highlight_current_player()
-        self.info_label.config(text="Player 1's Turn")
-        self.dice_result_label.config(text="Dice Result: ")
+        self.info_label.config(text=f"{self.player_names[1]}'s Turn")
         self.roll_button.config(state='normal')
 
     def save_game(self):
@@ -216,7 +238,7 @@ class SnakesAndLadders:
                 self.player_colors = game_state["player_colors"]
                 self.update_ui()
                 self.highlight_current_player()
-                self.info_label.config(text=f"Player {self.current_player}'s Turn")
+                self.info_label.config(text=f"{self.player_names[self.current_player]}'s Turn")
         except FileNotFoundError:
             pass
 
@@ -225,6 +247,12 @@ class SnakesAndLadders:
         if color:
             self.player_colors[player] = color
             self.update_ui()
+
+    def new_game(self):
+        self.root.destroy()
+        root = tk.Tk()
+        app = SnakesAndLadders(root)
+        root.mainloop()
 
 if __name__ == "__main__":
     root = tk.Tk()
