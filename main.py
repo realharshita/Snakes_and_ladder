@@ -6,12 +6,19 @@ class SnakesAndLadders:
         self.root = root
         self.root.title("Snakes and Ladders")
         self.root.geometry("600x700")
+        
+        self.snakes = {16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78}
+        self.ladders = {1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100}
+
         self.create_board()
         self.create_ui_elements()
         self.current_player = 1
 
-        self.snakes = {16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78}
-        self.ladders = {1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100}
+        self.tokens = {
+            1: self.canvas.create_oval(15, 15, 35, 35, fill='blue'),
+            2: self.canvas.create_oval(15, 15, 35, 35, fill='red')
+        }
+        self.update_ui()
 
     def create_board(self):
         self.canvas = tk.Canvas(self.root, width=500, height=500, bg='white')
@@ -88,11 +95,25 @@ class SnakesAndLadders:
         self.player_positions[player] = new_position
         self.update_ui()
 
-        self.current_player = 2 if self.current_player == 1 else 1
-        self.info_label.config(text=f"Player {self.current_player}'s Turn")
+        if new_position == 100:
+            self.info_label.config(text=f"Player {player} wins!")
+            self.roll_button.config(state='disabled')
+        else:
+            self.current_player = 2 if self.current_player == 1 else 1
+            self.info_label.config(text=f"Player {self.current_player}'s Turn")
 
     def update_ui(self):
-        pass
+        for player, position in self.player_positions.items():
+            x, y = self.get_coordinates(position)
+            self.canvas.coords(self.tokens[player], x - 10, y - 10, x + 10, y + 10)
+
+    def reset_game(self):
+        self.player_positions = {1: 1, 2: 1}
+        self.current_player = 1
+        self.roll_button.config(state='normal')
+        self.update_ui()
+        self.info_label.config(text="Player 1's Turn")
+        self.dice_result_label.config(text="Dice Result: ")
 
 if __name__ == "__main__":
     root = tk.Tk()
