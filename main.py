@@ -7,20 +7,38 @@ class SnakesAndLadders:
         self.root = root
         self.root.title("Snakes and Ladders")
         self.root.geometry("600x750")
-        
+
         self.snakes = {16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78}
         self.ladders = {1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100}
+        
+        self.player_count = 2  # Default to 2 players
+
+        self.show_player_selection_screen()
+
+    def show_player_selection_screen(self):
+        self.selection_frame = tk.Frame(self.root)
+        self.selection_frame.pack(pady=20)
+
+        tk.Label(self.selection_frame, text="Select Number of Players", font=("Helvetica", 16)).pack(pady=10)
+
+        tk.Button(self.selection_frame, text="1 Player", command=lambda: self.start_game(1), font=("Helvetica", 16)).pack(pady=10)
+        tk.Button(self.selection_frame, text="2 Players", command=lambda: self.start_game(2), font=("Helvetica", 16)).pack(pady=10)
+
+    def start_game(self, player_count):
+        self.player_count = player_count
+        self.selection_frame.destroy()
 
         self.create_board()
         self.create_ui_elements()
-        self.current_player = 1
-        self.highlight_current_player()
-
+        
         self.tokens = {
             1: self.canvas.create_oval(15, 15, 35, 35, fill='blue'),
             2: self.canvas.create_oval(15, 15, 35, 35, fill='red')
         }
         self.player_colors = {1: 'blue', 2: 'red'}
+        self.player_positions = {1: 1, 2: 1}
+        self.current_player = 1
+        self.highlight_current_player()
         self.update_ui()
 
     def create_board(self):
@@ -86,8 +104,6 @@ class SnakesAndLadders:
         self.color_button2 = tk.Button(self.root, text="Player 2 Color", command=lambda: self.choose_color(2), font=("Helvetica", 16))
         self.color_button2.pack(pady=10)
 
-        self.player_positions = {1: 1, 2: 1}
-
         self.player_info_label = tk.Label(self.root, text="Player Positions:", font=("Helvetica", 16))
         self.player_info_label.pack(pady=10)
 
@@ -140,7 +156,10 @@ class SnakesAndLadders:
             self.current_player = 2 if self.current_player == 1 else 1
             self.info_label.config(text=f"Player {self.current_player}'s Turn")
             self.highlight_current_player()
-            self.roll_button.config(state='normal' if self.current_player == 1 else 'disabled')
+            if self.current_player == 2 and self.player_count == 1:
+                self.root.after(1000, self.roll_dice)
+            else:
+                self.roll_button.config(state='normal')
 
     def highlight_current_player(self):
         for player in self.tokens:
@@ -179,5 +198,5 @@ class SnakesAndLadders:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    game = SnakesAndLadders(root)
+    app = SnakesAndLadders(root)
     root.mainloop()
